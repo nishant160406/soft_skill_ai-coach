@@ -6,6 +6,7 @@ import styles from './page.module.css';
 import GlassCard from '@/components/GlassCard';
 import HolographicButton from '@/components/HolographicButton';
 import TerminalInput from '@/components/TerminalInput';
+import VoiceRecorder from '@/components/VoiceRecorder';
 import PulseOrb from '@/components/PulseOrb';
 
 // Sample practice questions
@@ -26,6 +27,8 @@ export default function SessionPage() {
     const router = useRouter();
     const [response, setResponse] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [inputMode, setInputMode] = useState('keyboard'); // 'keyboard' or 'voice'
+    const [isRecording, setIsRecording] = useState(false);
 
     // Use useMemo with empty deps to compute once on mount
     const currentQuestion = useMemo(() => getRandomQuestion(), []);
@@ -59,6 +62,14 @@ export default function SessionPage() {
         setResponse('');
     };
 
+    const handleVoiceTranscript = (text) => {
+        setResponse(text);
+    };
+
+    const handleRecordingChange = (recording) => {
+        setIsRecording(recording);
+    };
+
     return (
         <div className={`container ${styles.sessionPage}`}>
             {/* Page Header */}
@@ -82,17 +93,77 @@ export default function SessionPage() {
                 </GlassCard>
             </section>
 
-            {/* Response Input */}
-            <section className={styles.responseSection}>
-                <div className={styles.sectionLabel}>Your Response</div>
-                <TerminalInput
-                    value={response}
-                    onChange={setResponse}
-                    placeholder="Type your response here... Be clear, confident, and professional."
-                    title="response.txt"
-                    size="large"
-                />
+            {/* Input Mode Toggle */}
+            <section className={styles.inputModeSection}>
+                <div className={styles.inputModeToggle}>
+                    <button
+                        className={`${styles.modeButton} ${inputMode === 'keyboard' ? styles.active : ''}`}
+                        onClick={() => setInputMode('keyboard')}
+                        disabled={isRecording}
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2" />
+                            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M6 16h12" />
+                        </svg>
+                        Keyboard
+                    </button>
+                    <button
+                        className={`${styles.modeButton} ${inputMode === 'voice' ? styles.active : ''}`}
+                        onClick={() => setInputMode('voice')}
+                        disabled={isRecording}
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                        Voice
+                    </button>
+                </div>
             </section>
+
+            {/* Response Input - Keyboard Mode */}
+            {inputMode === 'keyboard' && (
+                <section className={styles.responseSection}>
+                    <div className={styles.sectionLabel}>Your Response</div>
+                    <TerminalInput
+                        value={response}
+                        onChange={setResponse}
+                        placeholder="Type your response here... Be clear, confident, and professional."
+                        title="response.txt"
+                        size="large"
+                    />
+                </section>
+            )}
+
+            {/* Response Input - Voice Mode */}
+            {inputMode === 'voice' && (
+                <section className={styles.responseSection}>
+                    <div className={styles.sectionLabel}>Speak Your Response</div>
+                    <GlassCard className={styles.voiceCard}>
+                        <VoiceRecorder
+                            onTranscript={handleVoiceTranscript}
+                            onRecordingChange={handleRecordingChange}
+                            language="en-US"
+                        />
+                        {response && !isRecording && (
+                            <div className={styles.transcriptDisplay}>
+                                <div className={styles.transcriptHeader}>
+                                    <span>Transcribed Response</span>
+                                    <button
+                                        className={styles.editButton}
+                                        onClick={() => setInputMode('keyboard')}
+                                    >
+                                        Edit in Keyboard Mode
+                                    </button>
+                                </div>
+                                <p className={styles.transcriptText}>{response}</p>
+                            </div>
+                        )}
+                    </GlassCard>
+                </section>
+            )}
 
             {/* Tips */}
             <GlassCard className={styles.tipsCard} title="Pro Tips" size="small">
@@ -117,14 +188,14 @@ export default function SessionPage() {
                 <span className={styles.submitInfo}>
                     {response.length > 0
                         ? `${response.length} characters written`
-                        : 'Start typing your response above'
+                        : inputMode === 'voice' ? 'Click the microphone to start speaking' : 'Start typing your response above'
                     }
                 </span>
                 <div className={styles.submitActions}>
                     <HolographicButton
                         variant="ghost"
                         onClick={handleClear}
-                        disabled={!response.length || isProcessing}
+                        disabled={!response.length || isProcessing || isRecording}
                     >
                         Clear
                     </HolographicButton>
@@ -132,7 +203,7 @@ export default function SessionPage() {
                         variant="success"
                         filled
                         onClick={handleSubmit}
-                        disabled={!response.trim() || isProcessing}
+                        disabled={!response.trim() || isProcessing || isRecording}
                         loading={isProcessing}
                     >
                         {isProcessing ? 'Analyzing...' : 'Submit for Analysis'}

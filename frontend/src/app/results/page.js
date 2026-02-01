@@ -9,6 +9,7 @@ import HolographicButton from '@/components/HolographicButton';
 import NeonScoreGauge from '@/components/NeonScoreGauge';
 import TypewriterText from '@/components/TypewriterText';
 import PulseOrb from '@/components/PulseOrb';
+import WaveformPlayer from '@/components/WaveformPlayer';
 
 // Subscribe function for useSyncExternalStore (no-op for sessionStorage)
 function subscribe(callback) {
@@ -174,16 +175,11 @@ export default function ResultsPage() {
                     </svg>
                     Audio Feedback
                 </h2>
-                <GlassCard className={styles.audioCard} interactive>
-                    <div className={styles.audioIcon}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
-                    </div>
-                    <div className={styles.audioInfo}>
-                        <h4>Listen to Feedback</h4>
-                        <p>AI-generated audio summary of your performance</p>
-                    </div>
+                <GlassCard className={styles.audioCard}>
+                    <WaveformPlayer
+                        text={results.feedback}
+                        title="Click play to hear your feedback"
+                    />
                 </GlassCard>
             </section>
 

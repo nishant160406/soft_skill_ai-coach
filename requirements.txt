@@ -1,0 +1,12 @@
+# AI Soft Skill Coach - Backend Dependencies
+
+# Flask API
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# Text-to-Speech
+gTTS>=2.4.0
+
+# AI/ML (for TinyLlama model)
+transformers>=4.35.0
+torch>=2.0.0
