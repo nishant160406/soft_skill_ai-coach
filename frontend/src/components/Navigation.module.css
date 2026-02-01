@@ -1,0 +1,229 @@
+/* ============================================
+   NAVIGATION COMPONENT
+   Futuristic top navigation bar
+   ============================================ */
+
+.nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: rgba(10, 10, 15, 0.9);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--glass-border);
+    z-index: var(--z-sticky);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-8);
+}
+
+/* Bottom glow line */
+.nav::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+            transparent,
+            var(--neon-cyan),
+            var(--electric-blue),
+            var(--neon-cyan),
+            transparent);
+    animation: borderFlow 4s ease infinite;
+    background-size: 200% 200%;
+}
+
+/* Logo area */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.logoIcon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--electric-blue));
+    border-radius: var(--radius-md);
+    position: relative;
+}
+
+.logoIcon::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--neon-cyan), var(--electric-blue));
+    z-index: -1;
+    filter: blur(8px);
+    opacity: 0.5;
+}
+
+.logoIcon svg {
+    width: 24px;
+    height: 24px;
+    color: var(--bg-void);
+}
+
+.logoText {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-primary);
+}
+
+.logoAccent {
+    color: var(--neon-cyan);
+}
+
+/* Navigation links */
+.navLinks {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    list-style: none;
+}
+
+.navLink {
+    position: relative;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: var(--space-2) 0;
+    transition: color var(--transition-normal);
+}
+
+.navLink:hover {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan-glow);
+}
+
+/* Active link indicator */
+.navLink::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--neon-cyan);
+    transform: scaleX(0);
+    transition: transform var(--transition-normal);
+}
+
+.navLink:hover::after,
+.navLink.active::after {
+    transform: scaleX(1);
+}
+
+.navLink.active {
+    color: var(--neon-cyan);
+}
+
+/* Right side actions */
+.navActions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+/* Status indicator */
+.statusIndicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--neon-green);
+    box-shadow: 0 0 10px var(--neon-green-glow);
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Mobile menu button */
+.menuButton {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: var(--space-2);
+}
+
+.menuButton svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Spacer for fixed nav */
+.navSpacer {
+    height: 70px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .nav {
+        padding: 0 var(--space-4);
+    }
+
+    .navLinks {
+        display: none;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        gap: 0;
+        background: rgba(10, 10, 15, 0.95);
+        border-bottom: 1px solid var(--glass-border);
+        padding: var(--space-4);
+    }
+
+    .navLinks.open {
+        display: flex;
+    }
+
+    .navLink {
+        padding: var(--space-4);
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .navLink:last-child {
+        border-bottom: none;
+    }
+
+    .navLink::after {
+        display: none;
+    }
+
+    .menuButton {
+        display: block;
+    }
+
+    .statusIndicator {
+        display: none;
+    }
+}

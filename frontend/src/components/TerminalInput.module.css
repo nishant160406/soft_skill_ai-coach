@@ -1,0 +1,196 @@
+/* ============================================
+   TERMINAL INPUT COMPONENT
+   Code-editor styled text input
+   ============================================ */
+
+.terminalWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.terminal {
+    width: 100%;
+    background: var(--bg-void);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.terminal:focus-within {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 0 3px var(--neon-cyan-subtle), var(--glow-cyan);
+}
+
+/* Terminal header */
+.terminalHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.windowControls {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.windowDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.windowDot.red {
+    background: #FF5F56;
+}
+
+.windowDot.yellow {
+    background: #FFBD2E;
+}
+
+.windowDot.green {
+    background: #27C93F;
+}
+
+.terminalTitle {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-left: auto;
+}
+
+/* Main input area */
+.inputArea {
+    display: flex;
+    min-height: 200px;
+}
+
+/* Line numbers */
+.lineNumbers {
+    padding: var(--space-4);
+    padding-right: var(--space-3);
+    background: var(--bg-surface);
+    border-right: 1px solid var(--glass-border);
+    -webkit-user-select: none;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    min-width: 40px;
+    text-align: right;
+}
+
+.lineNumber {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: var(--text-muted);
+}
+
+.lineNumber.active {
+    color: var(--neon-cyan);
+}
+
+/* Text area */
+.textarea {
+    flex: 1;
+    padding: var(--space-4);
+    background: transparent;
+    border: none;
+    resize: none;
+    outline: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    line-height: 1.7;
+    color: var(--text-primary);
+    caret-color: var(--neon-cyan);
+}
+
+.textarea::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Cursor blink effect for empty state */
+.textarea:placeholder-shown::after {
+    animation: blink 1s step-start infinite;
+}
+
+/* Footer / status bar */
+.terminalFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-4);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--glass-border);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.charCount {
+    color: var(--text-secondary);
+}
+
+.charCount.warning {
+    color: var(--neon-orange);
+}
+
+.charCount.error {
+    color: var(--neon-red);
+}
+
+/* Status indicator */
+.statusTag {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background: var(--glass-bg);
+    border-radius: var(--radius-sm);
+}
+
+.statusDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--neon-green);
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Error state */
+.terminal.error {
+    border-color: var(--neon-red);
+}
+
+.terminal.error:focus-within {
+    box-shadow: 0 0 0 3px rgba(255, 0, 64, 0.1), 0 0 20px var(--neon-red-glow);
+}
+
+/* Disabled state */
+.terminal.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.terminal.disabled .textarea {
+    color: var(--text-muted);
+}
+
+/* Size variants */
+.compact .inputArea {
+    min-height: 120px;
+}
+
+.large .inputArea {
+    min-height: 300px;
+}
+
+.large .textarea {
+    font-size: var(--text-lg);
+}

@@ -1,0 +1,151 @@
+/* ============================================
+   SESSION PAGE STYLES
+   Practice session with terminal input
+   ============================================ */
+
+.sessionPage {
+    padding: var(--space-8) 0;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Page Header */
+.pageHeader {
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.pageHeader h1 {
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-2);
+}
+
+.pageHeader p {
+    color: var(--text-secondary);
+}
+
+/* Question Section */
+.questionSection {
+    margin-bottom: var(--space-6);
+}
+
+.questionCard {
+    padding: var(--space-6);
+}
+
+.questionLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-4);
+}
+
+.questionLabel svg {
+    width: 16px;
+    height: 16px;
+}
+
+.questionText {
+    font-size: var(--text-xl);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* Response Section */
+.responseSection {
+    margin-bottom: var(--space-6);
+}
+
+.sectionLabel {
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-3);
+}
+
+/* Tips Section */
+.tipsCard {
+    margin-bottom: var(--space-6);
+}
+
+.tipsList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    list-style: none;
+}
+
+.tipItem {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+.tipIcon {
+    color: var(--neon-green);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Submit Section */
+.submitSection {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+}
+
+.submitInfo {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.submitActions {
+    display: flex;
+    gap: var(--space-3);
+}
+
+/* Processing overlay */
+.processingOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    z-index: var(--z-modal);
+}
+
+.processingText {
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
+    color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .submitSection {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .submitActions {
+        width: 100%;
+        flex-direction: column;
+    }
+}

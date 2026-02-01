@@ -1,0 +1,479 @@
+/* ===================================
+   AI SOFT SKILL COACH - DESIGN SYSTEM
+   Futuristic / Technical Theme
+   =================================== */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+/* ===================================
+   CSS CUSTOM PROPERTIES (DESIGN TOKENS)
+   =================================== */
+:root {
+  /* === Primary Colors - Electric Cyan === */
+  --neon-cyan: #00F0FF;
+  --neon-cyan-dim: #00C4CC;
+  --neon-cyan-glow: rgba(0, 240, 255, 0.5);
+  --neon-cyan-subtle: rgba(0, 240, 255, 0.1);
+  
+  /* === Secondary - Electric Blue === */
+  --electric-blue: #0A84FF;
+  --electric-blue-glow: rgba(10, 132, 255, 0.5);
+  
+  /* === Accent - Neon Green (Success) === */
+  --neon-green: #39FF14;
+  --neon-green-dim: #2BC40E;
+  --neon-green-glow: rgba(57, 255, 20, 0.5);
+  
+  /* === Warning / Error === */
+  --neon-orange: #FF6B35;
+  --neon-orange-glow: rgba(255, 107, 53, 0.5);
+  --neon-red: #FF0040;
+  --neon-red-glow: rgba(255, 0, 64, 0.5);
+  
+  /* === Purple Accent === */
+  --neon-purple: #BF00FF;
+  --neon-purple-glow: rgba(191, 0, 255, 0.5);
+  
+  /* === Background Layers === */
+  --bg-void: #000000;
+  --bg-space: #0A0A0F;
+  --bg-surface: #12121A;
+  --bg-elevated: #1A1A2E;
+  --bg-card: #16213E;
+  
+  /* === Glass Effect === */
+  --glass-bg: rgba(22, 33, 62, 0.6);
+  --glass-bg-hover: rgba(22, 33, 62, 0.8);
+  --glass-border: rgba(0, 240, 255, 0.15);
+  --glass-border-hover: rgba(0, 240, 255, 0.4);
+  
+  /* === Text Colors === */
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0C0;
+  --text-muted: #6B6B7B;
+  --text-accent: var(--neon-cyan);
+  
+  /* === Typography === */
+  --font-display: 'Orbitron', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  
+  /* === Font Sizes === */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3rem;
+  
+  /* === Spacing === */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  
+  /* === Border Radius === */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+  
+  /* === Shadows & Glows === */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --glow-cyan: 0 0 20px var(--neon-cyan-glow), 0 0 40px var(--neon-cyan-glow);
+  --glow-green: 0 0 20px var(--neon-green-glow), 0 0 40px var(--neon-green-glow);
+  --glow-orange: 0 0 20px var(--neon-orange-glow);
+  --glow-red: 0 0 20px var(--neon-red-glow);
+  --glow-purple: 0 0 20px var(--neon-purple-glow);
+  
+  /* === Transitions === */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+  
+  /* === Z-Index Scale === */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-tooltip: 400;
+}
+
+/* ===================================
+   CSS RESET & BASE STYLES
+   =================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-space);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Circuit Grid Background === */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* === Scanline Effect === */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ===================================
+   TYPOGRAPHY
+   =================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: var(--text-4xl);
+  background: linear-gradient(135deg, var(--neon-cyan), var(--electric-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px var(--neon-cyan-glow);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+  color: var(--text-primary);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+}
+
+h4 {
+  font-size: var(--text-xl);
+  color: var(--text-secondary);
+}
+
+p {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+a {
+  color: var(--neon-cyan);
+  text-decoration: none;
+  transition: color var(--transition-fast), text-shadow var(--transition-fast);
+}
+
+a:hover {
+  color: var(--text-primary);
+  text-shadow: 0 0 10px var(--neon-cyan-glow);
+}
+
+code {
+  font-family: var(--font-mono);
+  background: var(--bg-elevated);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  border: 1px solid var(--glass-border);
+}
+
+/* ===================================
+   UTILITY CLASSES
+   =================================== */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--neon-cyan); }
+.text-success { color: var(--neon-green); }
+.text-warning { color: var(--neon-orange); }
+.text-error { color: var(--neon-red); }
+
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===================================
+   LAYOUT
+   =================================== */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: var(--space-8) 0;
+}
+
+/* ===================================
+   ANIMATIONS
+   =================================== */
+
+/* Glow Pulse */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--neon-cyan-glow), 0 0 10px var(--neon-cyan-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--neon-cyan-glow), 0 0 40px var(--neon-cyan-glow);
+  }
+}
+
+/* Border Flow */
+@keyframes borderFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Scan Line */
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* Flicker */
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.6; }
+}
+
+/* Float */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Rotate */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Data Stream */
+@keyframes dataStream {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
+
+/* Typewriter Cursor */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Score Count Up */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide In */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Pulse Ring */
+@keyframes pulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Matrix Rain (for backgrounds) */
+@keyframes matrixRain {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* Holographic shimmer */
+@keyframes holographic {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===================================
+   SCROLLBAR STYLING
+   =================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-surface);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-cyan-dim);
+}
+
+/* ===================================
+   SELECTION STYLING
+   =================================== */
+::selection {
+  background: var(--neon-cyan);
+  color: var(--bg-void);
+}
+
+/* ===================================
+   FOCUS STYLES
+   =================================== */
+:focus-visible {
+  outline: 2px solid var(--neon-cyan);
+  outline-offset: 2px;
+}
+
+/* ===================================
+   RESPONSIVE BREAKPOINTS
+   =================================== */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+  
+  .container {
+    padding: 0 var(--space-4);
+  }
+  
+  h1 {
+    font-size: var(--text-3xl);
+  }
+  
+  h2 {
+    font-size: var(--text-2xl);
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+  
+  h1 {
+    font-size: var(--text-2xl);
+  }
+}

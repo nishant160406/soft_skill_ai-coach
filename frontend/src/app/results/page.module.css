@@ -1,0 +1,215 @@
+/* ============================================
+   RESULTS PAGE STYLES
+   Score display and feedback
+   ============================================ */
+
+.resultsPage {
+    padding: var(--space-8) 0;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Page Header */
+.pageHeader {
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.pageHeader h1 {
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-2);
+}
+
+.sessionInfo {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* Scores Section */
+.scoresSection {
+    margin-bottom: var(--space-8);
+}
+
+.scoresGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+}
+
+.scoreCard {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-6);
+}
+
+/* Overall Score */
+.overallScore {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.overallLabel {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.overallValue {
+    font-family: var(--font-display);
+    font-size: var(--text-5xl);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Feedback Section */
+.feedbackSection {
+    margin-bottom: var(--space-8);
+}
+
+.sectionTitle {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.sectionTitle svg {
+    width: 20px;
+    height: 20px;
+    color: var(--neon-cyan);
+}
+
+.feedbackCard {
+    padding: var(--space-6);
+}
+
+.feedbackText {
+    font-size: var(--text-base);
+    line-height: 1.8;
+    color: var(--text-secondary);
+}
+
+/* Improved Answer Section */
+.improvedSection {
+    margin-bottom: var(--space-8);
+}
+
+.improvedCard {
+    padding: var(--space-6);
+}
+
+.comparisonGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+}
+
+.comparisonItem {
+    padding: var(--space-4);
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border);
+}
+
+.comparisonLabel {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.comparisonLabel.original {
+    color: var(--neon-orange);
+}
+
+.comparisonLabel.improved {
+    color: var(--neon-green);
+}
+
+.comparisonText {
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+/* Audio Section */
+.audioSection {
+    margin-bottom: var(--space-8);
+}
+
+.audioCard {
+    padding: var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.audioIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--neon-purple), var(--electric-blue));
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    flex-shrink: 0;
+}
+
+.audioIcon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.audioInfo h4 {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-1);
+}
+
+.audioInfo p {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Actions */
+.actionsSection {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .scoresGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .comparisonGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .actionsSection {
+        flex-direction: column;
+    }
+
+    .audioCard {
+        flex-direction: column;
+        text-align: center;
+    }
+}

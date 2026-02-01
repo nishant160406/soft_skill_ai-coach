@@ -1,0 +1,80 @@
+/* ============================================
+   TYPEWRITER TEXT COMPONENT
+   Animated text reveal effect
+   ============================================ */
+
+.typewriter {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    position: relative;
+}
+
+/* Cursor */
+.cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: var(--neon-cyan);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 1s step-start infinite;
+    box-shadow: 0 0 5px var(--neon-cyan-glow);
+}
+
+.cursor.hidden {
+    visibility: hidden;
+}
+
+/* Text container */
+.text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Highlighted text */
+.highlight {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan-glow);
+}
+
+/* Code inline */
+.code {
+    background: var(--bg-elevated);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    font-family: var(--font-mono);
+}
+
+/* Speed variants */
+.fast .cursor {
+    animation-duration: 0.5s;
+}
+
+.slow .cursor {
+    animation-duration: 1.5s;
+}
+
+/* Size variants */
+.small {
+    font-size: var(--text-sm);
+}
+
+.large {
+    font-size: var(--text-lg);
+}
+
+/* Scan line effect on complete */
+.complete::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(transparent 0%,
+            rgba(0, 240, 255, 0.05) 50%,
+            transparent 100%);
+    animation: scanLine 2s linear 1;
+    pointer-events: none;
+}
