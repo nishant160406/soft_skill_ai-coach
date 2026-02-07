@@ -1,7 +1,13 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styles from './VoiceRecorder.module.css';
+
+// Check if speech recognition is supported (runs once)
+const checkSpeechSupport = () => {
+    if (typeof window === 'undefined') return false;
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+};
 
 /**
  * VoiceRecorder Component
@@ -14,7 +20,7 @@ export default function VoiceRecorder({
     className = '',
 }) {
     const [isRecording, setIsRecording] = useState(false);
-    const [isSupported, setIsSupported] = useState(true);
+    const [isSupported] = useState(() => checkSpeechSupport());
     const [transcript, setTranscript] = useState('');
     const [interimTranscript, setInterimTranscript] = useState('');
     const [error, setError] = useState(null);
@@ -26,6 +32,7 @@ export default function VoiceRecorder({
     const animationRef = useRef(null);
     const streamRef = useRef(null);
     const transcriptRef = useRef(''); // Track transcript in ref to avoid stale closures
+    const isRecordingRef = useRef(false); // Track recording state in ref for event handlers
 
     // Update ref when transcript changes
     useEffect(() => {
@@ -46,8 +53,7 @@ export default function VoiceRecorder({
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-            setIsSupported(false);
-            setError('Speech recognition not supported in this browser');
+            // isSupported is already set via lazy initialization
             return;
         }
 
@@ -55,6 +61,7 @@ export default function VoiceRecorder({
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = language;
+        recognition.maxAlternatives = 1; // Get the best match only for cleaner transcripts
 
         recognition.onresult = (event) => {
             let finalText = '';
@@ -90,7 +97,16 @@ export default function VoiceRecorder({
         };
 
         recognition.onend = () => {
-            // Only restart if we're still recording
+            // Restart recognition if we're still supposed to be recording
+            // Web Speech API can stop automatically after silence, so we need to restart it
+            if (isRecordingRef.current) {
+                try {
+                    recognition.start();
+                    console.log('Speech recognition restarted after auto-stop');
+                } catch (e) {
+                    console.error('Failed to restart speech recognition:', e);
+                }
+            }
         };
 
         recognitionRef.current = recognition;
@@ -156,7 +172,8 @@ export default function VoiceRecorder({
         if (!isSupported) return;
 
         if (isRecording) {
-            // Stop recording
+            // Stop recording - Update ref FIRST to prevent onend from restarting
+            isRecordingRef.current = false;
             try {
                 recognitionRef.current?.stop();
             } catch (e) {
@@ -178,6 +195,7 @@ export default function VoiceRecorder({
             try {
                 await startVolumeMonitor();
                 recognitionRef.current?.start();
+                isRecordingRef.current = true; // Update ref after successful start
                 setIsRecording(true);
                 if (onRecordingChange) onRecordingChange(true);
             } catch (err) {
