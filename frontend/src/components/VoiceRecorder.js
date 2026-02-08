@@ -1,13 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import styles from './VoiceRecorder.module.css';
-
-// Check if speech recognition is supported (runs once)
-const checkSpeechSupport = () => {
-    if (typeof window === 'undefined') return false;
-    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-};
 
 /**
  * VoiceRecorder Component
@@ -20,7 +14,7 @@ export default function VoiceRecorder({
     className = '',
 }) {
     const [isRecording, setIsRecording] = useState(false);
-    const [isSupported] = useState(() => checkSpeechSupport());
+    const [isSupported, setIsSupported] = useState(true);
     const [transcript, setTranscript] = useState('');
     const [interimTranscript, setInterimTranscript] = useState('');
     const [error, setError] = useState(null);
@@ -53,7 +47,8 @@ export default function VoiceRecorder({
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-            // isSupported is already set via lazy initialization
+            setIsSupported(false);
+            setError('Speech recognition not supported in this browser');
             return;
         }
 
