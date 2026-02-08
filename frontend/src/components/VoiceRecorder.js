@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styles from './VoiceRecorder.module.css';
 
 /**
- * VoiceRecorder Component
+ * VoiceRecorder Component - Optimized for Performance
  * Records voice input and converts to text using Web Speech API
  */
 export default function VoiceRecorder({
@@ -20,86 +20,118 @@ export default function VoiceRecorder({
     const [error, setError] = useState(null);
     const [volume, setVolume] = useState(0);
 
+    // Refs for stable references (no re-renders)
     const recognitionRef = useRef(null);
     const audioContextRef = useRef(null);
     const analyserRef = useRef(null);
     const animationRef = useRef(null);
     const streamRef = useRef(null);
-    const transcriptRef = useRef(''); // Track transcript in ref to avoid stale closures
-    const isRecordingRef = useRef(false); // Track recording state in ref for event handlers
+    const isRecordingRef = useRef(false);
+    const interimRef = useRef(''); // Track interim in ref for instant access
+    const lastVolumeUpdateRef = useRef(0); // Throttle volume updates
+    const dataArrayRef = useRef(null); // Reuse data array
 
-    // Update ref when transcript changes
+    // Stable callback refs to avoid re-creating speech recognition
+    const onTranscriptRef = useRef(onTranscript);
+    const onRecordingChangeRef = useRef(onRecordingChange);
+
     useEffect(() => {
-        transcriptRef.current = transcript;
-    }, [transcript]);
+        onTranscriptRef.current = onTranscript;
+        onRecordingChangeRef.current = onRecordingChange;
+    }, [onTranscript, onRecordingChange]);
 
     // Call onTranscript when transcript changes
     useEffect(() => {
-        if (onTranscript && transcript) {
-            onTranscript(transcript);
+        if (onTranscriptRef.current) {
+            onTranscriptRef.current(transcript);
         }
-    }, [transcript, onTranscript]);
+    }, [transcript]);
 
-    // Initialize speech recognition
+    // Check browser support on mount using separate effect
+    const supportCheckedRef = useRef(false);
+
+    useEffect(() => {
+        if (supportCheckedRef.current) return;
+        supportCheckedRef.current = true;
+
+        if (typeof window === 'undefined') return;
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            // Use startTransition to avoid cascading render warning
+            import('react').then(({ startTransition }) => {
+                startTransition(() => {
+                    setIsSupported(false);
+                    setError('Speech recognition not supported in this browser');
+                });
+            });
+        }
+    }, []);
+
+    // Initialize speech recognition ONCE
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+        // Skip if not supported
         if (!SpeechRecognition) {
-            setIsSupported(false);
-            setError('Speech recognition not supported in this browser');
             return;
         }
 
         const recognition = new SpeechRecognition();
+
+        // Optimized settings for faster response
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = language;
-        recognition.maxAlternatives = 1; // Get the best match only for cleaner transcripts
+        recognition.maxAlternatives = 1;
 
+        // FAST result handler - minimal processing
         recognition.onresult = (event) => {
             let finalText = '';
             let interimText = '';
 
+            // Process only new results (faster than processing all)
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const result = event.results[i];
+                const text = result[0].transcript;
+
                 if (result.isFinal) {
-                    finalText += result[0].transcript + ' ';
+                    finalText += text + ' ';
                 } else {
-                    interimText += result[0].transcript;
+                    interimText += text;
                 }
             }
 
+            // Update interim ref immediately (no state update needed for ref)
+            interimRef.current = interimText;
+
+            // Batch state updates
             if (finalText) {
-                setTranscript(prev => {
-                    const newTranscript = prev + finalText;
-                    return newTranscript;
-                });
+                setTranscript(prev => prev + finalText);
             }
             setInterimTranscript(interimText);
         };
 
         recognition.onerror = (event) => {
+            if (event.error === 'no-speech' || event.error === 'aborted') return;
+
             console.error('Speech recognition error:', event.error);
             if (event.error === 'not-allowed') {
-                setError('Microphone access denied. Please allow microphone access.');
-            } else if (event.error === 'no-speech') {
-                // Ignore no-speech errors, they're common
-            } else if (event.error !== 'aborted') {
+                setError('Microphone access denied');
+            } else {
                 setError(`Error: ${event.error}`);
             }
         };
 
         recognition.onend = () => {
-            // Restart recognition if we're still supposed to be recording
-            // Web Speech API can stop automatically after silence, so we need to restart it
+            // Quick restart if still recording
             if (isRecordingRef.current) {
                 try {
                     recognition.start();
-                    console.log('Speech recognition restarted after auto-stop');
                 } catch (e) {
-                    console.error('Failed to restart speech recognition:', e);
+                    // Already started, ignore
                 }
             }
         };
@@ -107,52 +139,77 @@ export default function VoiceRecorder({
         recognitionRef.current = recognition;
 
         return () => {
-            if (recognitionRef.current) {
-                try {
-                    recognitionRef.current.stop();
-                } catch (e) {
-                    // Ignore
-                }
-            }
+            try {
+                recognitionRef.current?.stop();
+            } catch (e) { }
         };
     }, [language]);
 
-    // Volume visualization
-    const startVolumeMonitor = async () => {
+    // Optimized volume monitor with throttling
+    const startVolumeMonitor = useCallback(async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
             streamRef.current = stream;
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-            analyserRef.current = audioContextRef.current.createAnalyser();
-            const source = audioContextRef.current.createMediaStreamSource(stream);
-            source.connect(analyserRef.current);
-            analyserRef.current.fftSize = 256;
 
-            const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContextRef.current = audioContext;
+
+            const analyser = audioContext.createAnalyser();
+            analyserRef.current = analyser;
+
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+
+            // Smaller FFT for faster processing
+            analyser.fftSize = 64;
+            analyser.smoothingTimeConstant = 0.5;
+
+            // Reuse data array
+            dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
 
             const updateVolume = () => {
-                if (analyserRef.current) {
-                    analyserRef.current.getByteFrequencyData(dataArray);
-                    const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-                    setVolume(average / 128);
-                    animationRef.current = requestAnimationFrame(updateVolume);
+                if (!analyserRef.current || !isRecordingRef.current) return;
+
+                const now = performance.now();
+                // Throttle to ~30fps (33ms) instead of 60fps
+                if (now - lastVolumeUpdateRef.current > 33) {
+                    analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+
+                    // Fast average calculation
+                    let sum = 0;
+                    const arr = dataArrayRef.current;
+                    const len = arr.length;
+                    for (let i = 0; i < len; i++) {
+                        sum += arr[i];
+                    }
+
+                    setVolume(sum / (len * 128));
+                    lastVolumeUpdateRef.current = now;
                 }
+
+                animationRef.current = requestAnimationFrame(updateVolume);
             };
 
             updateVolume();
         } catch (err) {
-            console.error('Error accessing microphone:', err);
+            console.error('Microphone error:', err);
             setError('Could not access microphone');
         }
-    };
+    }, []);
 
-    const stopVolumeMonitor = () => {
+    const stopVolumeMonitor = useCallback(() => {
         if (animationRef.current) {
             cancelAnimationFrame(animationRef.current);
             animationRef.current = null;
         }
         if (audioContextRef.current) {
-            audioContextRef.current.close();
+            audioContextRef.current.close().catch(() => { });
             audioContextRef.current = null;
         }
         if (streamRef.current) {
@@ -160,53 +217,105 @@ export default function VoiceRecorder({
             streamRef.current = null;
         }
         setVolume(0);
-    };
+    }, []);
 
-    // Toggle recording
+    // Optimized toggle with faster state updates
     const toggleRecording = useCallback(async () => {
         if (!isSupported) return;
 
         if (isRecording) {
-            // Stop recording - Update ref FIRST to prevent onend from restarting
+            // STOP - Update ref immediately
             isRecordingRef.current = false;
+
+            // Stop recognition first (fast)
             try {
                 recognitionRef.current?.stop();
-            } catch (e) {
-                // Ignore
-            }
+            } catch (e) { }
+
+            // Stop volume monitor
             stopVolumeMonitor();
+
+            // Get final transcript including interim
+            const finalInterim = interimRef.current;
+
+            // Update states in one batch
             setIsRecording(false);
             setInterimTranscript('');
-            if (onRecordingChange) onRecordingChange(false);
 
-            // Final transcript is already sent via useEffect
+            if (finalInterim) {
+                setTranscript(prev => {
+                    const result = (prev + finalInterim).trim();
+                    // Notify parent immediately
+                    if (result && onTranscriptRef.current) {
+                        onTranscriptRef.current(result);
+                    }
+                    return result;
+                });
+            }
+
+            interimRef.current = '';
+            onRecordingChangeRef.current?.(false);
         } else {
-            // Start recording
+            // START - Clear and begin
             setError(null);
             setTranscript('');
             setInterimTranscript('');
-            transcriptRef.current = '';
+            interimRef.current = '';
 
             try {
+                // Start volume monitor first
                 await startVolumeMonitor();
-                recognitionRef.current?.start();
-                isRecordingRef.current = true; // Update ref after successful start
+
+                // Small delay to ensure recognition is fully stopped from previous session
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // Try to start recognition
+                if (recognitionRef.current) {
+                    try {
+                        recognitionRef.current.start();
+                    } catch (e) {
+                        // If already started or invalid state, abort and recreate
+                        if (e.name === 'InvalidStateError') {
+                            recognitionRef.current.abort();
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                            recognitionRef.current.start();
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
+
+                isRecordingRef.current = true;
                 setIsRecording(true);
-                if (onRecordingChange) onRecordingChange(true);
+                onRecordingChangeRef.current?.(true);
             } catch (err) {
-                console.error('Start recording error:', err);
-                setError('Could not start recording. Check microphone permissions.');
+                console.error('Start error:', err);
+                setError('Could not start recording. Please try again.');
+                isRecordingRef.current = false;
+                setIsRecording(false);
+                stopVolumeMonitor();
             }
         }
-    }, [isSupported, isRecording, onRecordingChange]);
+    }, [isSupported, isRecording, startVolumeMonitor, stopVolumeMonitor]);
 
     // Clear transcript
     const clearTranscript = useCallback(() => {
         setTranscript('');
         setInterimTranscript('');
-        transcriptRef.current = '';
-        if (onTranscript) onTranscript('');
-    }, [onTranscript]);
+        interimRef.current = '';
+        onTranscriptRef.current?.('');
+    }, []);
+
+    // Memoized class names
+    const containerClass = useMemo(() =>
+        `${styles.voiceRecorder} ${className}`.trim(),
+        [className]
+    );
+
+    const buttonClass = useMemo(() =>
+        `${styles.recordButton} ${isRecording ? styles.recording : ''}`,
+        [isRecording]
+    );
 
     if (!isSupported) {
         return (
@@ -222,10 +331,10 @@ export default function VoiceRecorder({
     }
 
     return (
-        <div className={`${styles.voiceRecorder} ${className}`}>
+        <div className={containerClass}>
             {/* Recording Button */}
             <button
-                className={`${styles.recordButton} ${isRecording ? styles.recording : ''}`}
+                className={buttonClass}
                 onClick={toggleRecording}
                 aria-label={isRecording ? 'Stop recording' : 'Start recording'}
             >

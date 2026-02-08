@@ -45,10 +45,11 @@ def evaluate():
             return jsonify({"error": "Missing 'answer' in request body"}), 400
         
         answer = data['answer']
+        question = data.get('question', '')  # Get question if provided
         
         if AI_AVAILABLE and evaluate_soft_skills:
-            # Call the AI engine to evaluate
-            result = evaluate_soft_skills(answer)
+            # Call the AI engine to evaluate with question context
+            result = evaluate_soft_skills(answer, question)
             return jsonify(result)
         else:
             # Return mock result if AI not available

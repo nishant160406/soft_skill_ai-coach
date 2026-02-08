@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import GlassCard from '@/components/GlassCard';
@@ -9,53 +9,117 @@ import TerminalInput from '@/components/TerminalInput';
 import VoiceRecorder from '@/components/VoiceRecorder';
 import PulseOrb from '@/components/PulseOrb';
 
-// Sample practice questions
-const practiceQuestions = [
+// Practice questions pool
+const allQuestions = [
     "Tell me about yourself and your professional background.",
     "Describe a time when you had to work with a difficult team member.",
     "How do you handle stress and pressure in the workplace?",
     "What are your greatest strengths and how do they help in your work?",
     "Describe a situation where you had to communicate complex information to someone.",
+    "Tell me about a time you failed and what you learned from it.",
+    "How do you prioritize tasks when you have multiple deadlines?",
+    "Describe your ideal work environment.",
+    "What motivates you to do your best work?",
+    "How do you handle constructive criticism?",
 ];
 
-// Get a random question - computed once per page load
-function getRandomQuestion() {
-    return practiceQuestions[Math.floor(Math.random() * practiceQuestions.length)];
+// Number of questions per session
+const QUESTIONS_PER_SESSION = 2;
+
+// Get random unique questions
+function getRandomQuestions(count) {
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
 }
 
 export default function SessionPage() {
     const router = useRouter();
+
+    // Session state
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [questionsAndResponses, setQuestionsAndResponses] = useState([]);
     const [response, setResponse] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
-    const [inputMode, setInputMode] = useState('keyboard'); // 'keyboard' or 'voice'
+    const [inputMode, setInputMode] = useState('keyboard');
     const [isRecording, setIsRecording] = useState(false);
+    const [error, setError] = useState(null);
 
-    // Use useMemo with empty deps to compute once on mount
-    const currentQuestion = useMemo(() => getRandomQuestion(), []);
+    // Get session questions (computed once on mount)
+    const sessionQuestions = useMemo(() => getRandomQuestions(QUESTIONS_PER_SESSION), []);
+    const currentQuestion = sessionQuestions[currentQuestionIndex];
+    const isLastQuestion = currentQuestionIndex === QUESTIONS_PER_SESSION - 1;
+
+    // Call the AI backend to evaluate the response
+    const evaluateResponse = useCallback(async (question, answer) => {
+        try {
+            const res = await fetch('http://localhost:5000/api/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answer, question }),
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to get AI evaluation');
+            }
+
+            return await res.json();
+        } catch (err) {
+            console.error('API Error:', err);
+            // Return fallback if API fails
+            return {
+                clarity: Math.floor(Math.random() * 3) + 6,
+                confidence: Math.floor(Math.random() * 3) + 5,
+                tone: Math.floor(Math.random() * 3) + 6,
+                feedback: "Unable to connect to AI service. This is automated feedback: Your response shows good structure. Consider adding more specific examples and confident language.",
+                improvedAnswer: answer
+            };
+        }
+    }, []);
 
     const handleSubmit = async () => {
         if (!response.trim()) return;
 
         setIsProcessing(true);
+        setError(null);
 
-        // Simulate AI processing delay (in real app, call backend API)
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        try {
+            // Get AI evaluation for this response
+            const results = await evaluateResponse(currentQuestion, response);
 
-        // Store response in sessionStorage for results page
-        sessionStorage.setItem('lastQuestion', currentQuestion);
-        sessionStorage.setItem('lastResponse', response);
+            // Store this Q&A pair
+            const newQA = {
+                question: currentQuestion,
+                response: response,
+                results: results
+            };
 
-        // Mock scores (in real app, these come from AI backend)
-        const mockResults = {
-            clarity: Math.floor(Math.random() * 4) + 6,
-            confidence: Math.floor(Math.random() * 4) + 5,
-            tone: Math.floor(Math.random() * 4) + 6,
-            feedback: "Your response demonstrates good structure and clear communication. Consider using more specific examples to strengthen your points. The language is professional but could benefit from more confident phrasing.",
-            improvedAnswer: "I am a dedicated professional with over 5 years of experience in software development. My background includes leading cross-functional teams and delivering complex projects on time. I excel at problem-solving and thrive in collaborative environments where I can contribute to team success."
-        };
-        sessionStorage.setItem('lastResults', JSON.stringify(mockResults));
+            const updatedQAs = [...questionsAndResponses, newQA];
+            setQuestionsAndResponses(updatedQAs);
 
-        router.push('/results');
+            if (isLastQuestion) {
+                // All questions answered - go to results
+                sessionStorage.setItem('sessionData', JSON.stringify({
+                    questionsAndResponses: updatedQAs,
+                    timestamp: new Date().toISOString()
+                }));
+
+                // Legacy format for backwards compatibility
+                sessionStorage.setItem('lastQuestion', currentQuestion);
+                sessionStorage.setItem('lastResponse', response);
+                sessionStorage.setItem('lastResults', JSON.stringify(results));
+
+                router.push('/results');
+            } else {
+                // Move to next question
+                setCurrentQuestionIndex(prev => prev + 1);
+                setResponse('');
+                setIsProcessing(false);
+            }
+        } catch (err) {
+            console.error('Submit error:', err);
+            setError('Failed to process response. Please try again.');
+            setIsProcessing(false);
+        }
     };
 
     const handleClear = () => {
@@ -75,8 +139,21 @@ export default function SessionPage() {
             {/* Page Header */}
             <header className={styles.pageHeader}>
                 <h1>Practice Session</h1>
-                <p>Answer the question below to receive AI feedback</p>
+                <p>Answer the questions below to receive AI feedback</p>
             </header>
+
+            {/* Progress Indicator */}
+            <section className={styles.progressSection}>
+                <div className={styles.progressBar}>
+                    <div
+                        className={styles.progressFill}
+                        style={{ width: `${((currentQuestionIndex + 1) / QUESTIONS_PER_SESSION) * 100}%` }}
+                    />
+                </div>
+                <span className={styles.progressText}>
+                    Question {currentQuestionIndex + 1} of {QUESTIONS_PER_SESSION}
+                </span>
+            </section>
 
             {/* Question Card */}
             <section className={styles.questionSection}>
@@ -87,7 +164,7 @@ export default function SessionPage() {
                             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                             <path d="M12 17h.01" />
                         </svg>
-                        Practice Question
+                        Question {currentQuestionIndex + 1}
                     </div>
                     <p className={styles.questionText}>{currentQuestion}</p>
                 </GlassCard>
@@ -165,6 +242,18 @@ export default function SessionPage() {
                 </section>
             )}
 
+            {/* Error Message */}
+            {error && (
+                <div className={styles.errorMessage}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {error}
+                </div>
+            )}
+
             {/* Tips */}
             <GlassCard className={styles.tipsCard} title="Pro Tips" size="small">
                 <ul className={styles.tipsList}>
@@ -206,7 +295,7 @@ export default function SessionPage() {
                         disabled={!response.trim() || isProcessing || isRecording}
                         loading={isProcessing}
                     >
-                        {isProcessing ? 'Analyzing...' : 'Submit for Analysis'}
+                        {isProcessing ? 'Analyzing...' : isLastQuestion ? 'Submit & View Results' : 'Next Question'}
                     </HolographicButton>
                 </div>
             </section>
@@ -215,7 +304,9 @@ export default function SessionPage() {
             {isProcessing && (
                 <div className={styles.processingOverlay}>
                     <PulseOrb state="processing" size="large" />
-                    <span className={styles.processingText}>Analyzing your response...</span>
+                    <span className={styles.processingText}>
+                        {isLastQuestion ? 'Analyzing your responses...' : 'Processing...'}
+                    </span>
                 </div>
             )}
         </div>

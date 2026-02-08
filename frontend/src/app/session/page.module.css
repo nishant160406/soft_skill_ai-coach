@@ -24,6 +24,55 @@
     color: var(--text-secondary);
 }
 
+/* Progress Section */
+.progressSection {
+    margin-bottom: var(--space-6);
+    text-align: center;
+}
+
+.progressBar {
+    height: 6px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-bottom: var(--space-3);
+    border: 1px solid var(--glass-border);
+}
+
+.progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--electric-blue), var(--neon-purple));
+    border-radius: var(--radius-full);
+    transition: width 0.5s ease;
+    box-shadow: 0 0 10px var(--neon-cyan-subtle);
+}
+
+.progressText {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+/* Error Message */
+.errorMessage {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: rgba(255, 77, 77, 0.1);
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-6);
+    color: #ff6b6b;
+    font-size: var(--text-sm);
+}
+
+.errorMessage svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
 /* Question Section */
 .questionSection {
     margin-bottom: var(--space-6);
