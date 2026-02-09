@@ -6,11 +6,18 @@ MODEL_NAME = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
+# Use float16 for faster inference (if GPU available, otherwise float32)
+dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
-    torch_dtype=torch.float32,
-    device_map="auto"
+    torch_dtype=dtype,
+    device_map="auto",
+    low_cpu_mem_usage=True
 )
+
+# Set model to eval mode for faster inference
+model.eval()
 
 
 def extract_score(text: str, label: str) -> int:
@@ -47,36 +54,46 @@ def evaluate_soft_skills(answer: str, question: str = "") -> dict:
     Evaluate the user's answer using the AI model.
     Returns scores for clarity, confidence, tone, feedback, and improved answer.
     """
+    import random
     
-    question_text = f"Question: {question}\n" if question else ""
+    question_text = f"Q: {question}\n" if question else ""
     
-    prompt = f"""You are an AI soft-skill coach evaluating a user's answer.
+    # Shorter prompt for faster generation
+    perspectives = [
+        "concise and impactful",
+        "specific achievements",
+        "leadership qualities",
+        "problem-solving approach",
+        "teamwork aspects",
+        "confident language",
+    ]
+    focus = random.choice(perspectives)
+    
+    prompt = f"""Evaluate this answer for soft skills. Be brief.
 
-{question_text}User's Answer: {answer}
+{question_text}Answer: {answer}
 
-Evaluate this specific answer. Provide scores and feedback that directly reference what the user said.
+Clarity score (0-10): 
+Confidence score (0-10): 
+Tone score (0-10): 
 
-Clarity score (0-10): [score based on how clearly they expressed their ideas]
-Confidence score (0-10): [score based on use of confident vs hesitant language]
-Professional tone score (0-10): [score based on professionalism of language]
+Feedback: [1-2 sentences on improvements, focus on {focus}]
 
-Feedback:
-[2-3 sentences of specific feedback about THIS answer, mentioning what they did well and what could improve]
+Improved answer: [Better version with {focus}]"""
 
-Improved answer:
-[A rewritten version of their answer that is more clear, confident, and professional]"""
-
-    inputs = tokenizer(prompt, return_tensors="pt")
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
 
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=400,
-        temperature=0.7,
-        do_sample=True,
-        top_p=0.9,
-        repetition_penalty=1.3
-    )
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=250,
+            temperature=0.7,
+            do_sample=True,
+            top_p=0.9,
+            repetition_penalty=1.2,
+            pad_token_id=tokenizer.eos_token_id
+        )
 
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     

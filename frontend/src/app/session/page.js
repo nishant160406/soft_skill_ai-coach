@@ -108,6 +108,25 @@ export default function SessionPage() {
                 sessionStorage.setItem('lastResponse', response);
                 sessionStorage.setItem('lastResults', JSON.stringify(results));
 
+                // Save to persistent history (localStorage) for dashboard stats
+                const SESSION_HISTORY_KEY = 'softSkillCoach_sessionHistory';
+                try {
+                    const existingHistory = JSON.parse(localStorage.getItem(SESSION_HISTORY_KEY) || '[]');
+                    // Save summary of each Q&A from this session
+                    updatedQAs.forEach(qa => {
+                        existingHistory.push({
+                            date: new Date().toISOString(),
+                            question: qa.question,
+                            clarity: qa.results?.clarity || 0,
+                            confidence: qa.results?.confidence || 0,
+                            tone: qa.results?.tone || 0,
+                        });
+                    });
+                    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(existingHistory));
+                } catch (e) {
+                    console.error('Error saving to history:', e);
+                }
+
                 router.push('/results');
             } else {
                 // Move to next question

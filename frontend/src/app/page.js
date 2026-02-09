@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import GlassCard from '@/components/GlassCard';
@@ -7,7 +8,54 @@ import HolographicButton from '@/components/HolographicButton';
 import PulseOrb from '@/components/PulseOrb';
 import TypewriterText from '@/components/TypewriterText';
 
+// Storage key for session history
+const SESSION_HISTORY_KEY = 'softSkillCoach_sessionHistory';
+
+// Subscribe to storage changes
+function subscribeToStorage(callback) {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+// Get snapshot from localStorage
+function getHistorySnapshot() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(SESSION_HISTORY_KEY);
+}
+
+function getServerSnapshot() {
+  return null;
+}
+
 export default function Dashboard() {
+  const historyJson = useSyncExternalStore(subscribeToStorage, getHistorySnapshot, getServerSnapshot);
+
+  const stats = useMemo(() => {
+    if (!historyJson) return { sessions: 0, avgScore: '--', skillsImproved: 0 };
+
+    try {
+      const history = JSON.parse(historyJson);
+      if (!Array.isArray(history) || history.length === 0) {
+        return { sessions: 0, avgScore: '--', skillsImproved: 0 };
+      }
+
+      const sessions = history.length;
+      const totalScore = history.reduce((sum, session) => {
+        const avg = (session.clarity + session.confidence + session.tone) / 3;
+        return sum + avg;
+      }, 0);
+      const avgScore = (totalScore / sessions).toFixed(1);
+      const skillsImproved = history.filter(session =>
+        session.clarity >= 7 || session.confidence >= 7 || session.tone >= 7
+      ).length;
+
+      return { sessions, avgScore, skillsImproved };
+    } catch (e) {
+      console.error('Error parsing session history:', e);
+      return { sessions: 0, avgScore: '--', skillsImproved: 0 };
+    }
+  }, [historyJson]);
+
   return (
     <div className={`container ${styles.dashboard}`}>
       {/* Hero Section */}
@@ -39,6 +87,11 @@ export default function Dashboard() {
                 Start Practice Session
               </HolographicButton>
             </Link>
+            <Link href="/analyze">
+              <HolographicButton variant="success" size="large">
+                Free Analysis
+              </HolographicButton>
+            </Link>
             <Link href="/history">
               <HolographicButton variant="ghost" size="large">
                 View Progress
@@ -52,15 +105,15 @@ export default function Dashboard() {
       <section className={styles.statsSection}>
         <div className={styles.statsGrid}>
           <GlassCard className={styles.statCard}>
-            <div className={styles.statValue}>0</div>
+            <div className={styles.statValue}>{stats.sessions}</div>
             <div className={styles.statLabel}>Sessions Completed</div>
           </GlassCard>
           <GlassCard className={styles.statCard} accent="green">
-            <div className={styles.statValue}>--</div>
+            <div className={styles.statValue}>{stats.avgScore}</div>
             <div className={styles.statLabel}>Average Score</div>
           </GlassCard>
           <GlassCard className={styles.statCard} accent="purple">
-            <div className={styles.statValue}>0</div>
+            <div className={styles.statValue}>{stats.skillsImproved}</div>
             <div className={styles.statLabel}>Skills Improved</div>
           </GlassCard>
         </div>

@@ -1,55 +1,63 @@
 'use client';
 
+import { useMemo, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import GlassCard from '@/components/GlassCard';
 import HolographicButton from '@/components/HolographicButton';
 
-// Mock historical data (in real app, this comes from database/API)
-const mockHistory = [
-    {
-        id: 1,
-        date: '2026-02-01',
-        question: 'Tell me about yourself and your professional background.',
-        clarity: 8,
-        confidence: 7,
-        tone: 8,
-        overall: 7.7,
-    },
-    {
-        id: 2,
-        date: '2026-01-30',
-        question: 'Describe a time when you had to work with a difficult team member.',
-        clarity: 6,
-        confidence: 5,
-        tone: 7,
-        overall: 6.0,
-    },
-    {
-        id: 3,
-        date: '2026-01-28',
-        question: 'How do you handle stress and pressure in the workplace?',
-        clarity: 7,
-        confidence: 6,
-        tone: 7,
-        overall: 6.7,
-    },
-];
+// Storage key for session history
+const SESSION_HISTORY_KEY = 'softSkillCoach_sessionHistory';
+
+// Subscribe to storage changes
+function subscribeToStorage(callback) {
+    window.addEventListener('storage', callback);
+    return () => window.removeEventListener('storage', callback);
+}
+
+// Get snapshot of history from localStorage
+function getHistorySnapshot() {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(SESSION_HISTORY_KEY);
+}
+
+function getServerSnapshot() {
+    return null;
+}
 
 export default function HistoryPage() {
-    const hasHistory = mockHistory.length > 0;
+    const historyJson = useSyncExternalStore(subscribeToStorage, getHistorySnapshot, getServerSnapshot);
+
+    const history = useMemo(() => {
+        if (!historyJson) return [];
+        try {
+            const parsedHistory = JSON.parse(historyJson);
+            return parsedHistory
+                .map((session, index) => ({
+                    ...session,
+                    id: index + 1,
+                    overall: ((session.clarity + session.confidence + session.tone) / 3).toFixed(1)
+                }))
+                .reverse();
+        } catch (e) {
+            console.error('Error parsing history:', e);
+            return [];
+        }
+    }, [historyJson]);
+
+    const hasHistory = history.length > 0;
 
     // Calculate stats
-    const totalSessions = mockHistory.length;
+    const totalSessions = history.length;
     const avgScore = totalSessions > 0
-        ? (mockHistory.reduce((sum, s) => sum + s.overall, 0) / totalSessions).toFixed(1)
+        ? (history.reduce((sum, s) => sum + parseFloat(s.overall), 0) / totalSessions).toFixed(1)
         : '--';
     const bestScore = totalSessions > 0
-        ? Math.max(...mockHistory.map(s => s.overall)).toFixed(1)
+        ? Math.max(...history.map(s => parseFloat(s.overall))).toFixed(1)
         : '--';
     const improvement = totalSessions > 1
-        ? ((mockHistory[0].overall - mockHistory[mockHistory.length - 1].overall) > 0 ? '+' : '') +
-        (mockHistory[0].overall - mockHistory[mockHistory.length - 1].overall).toFixed(1)
+        ? ((parseFloat(history[0].overall) - parseFloat(history[history.length - 1].overall)) > 0 ? '+' : '') +
+        (parseFloat(history[0].overall) - parseFloat(history[history.length - 1].overall)).toFixed(1)
         : '--';
 
     return (
@@ -83,7 +91,7 @@ export default function HistoryPage() {
             {/* Timeline or Empty State */}
             {hasHistory ? (
                 <div className={styles.timeline}>
-                    {mockHistory.map((session) => (
+                    {history.map((session) => (
                         <div key={session.id} className={styles.timelineItem}>
                             <GlassCard className={styles.sessionCard} interactive>
                                 <div className={styles.sessionHeader}>
