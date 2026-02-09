@@ -247,18 +247,12 @@ export default function VoiceRecorder({
             setInterimTranscript('');
 
             if (finalInterim) {
-                setTranscript(prev => {
-                    const result = (prev + finalInterim).trim();
-                    // Notify parent immediately
-                    if (result && onTranscriptRef.current) {
-                        onTranscriptRef.current(result);
-                    }
-                    return result;
-                });
+                setTranscript(prev => (prev + finalInterim).trim());
             }
 
             interimRef.current = '';
-            onRecordingChangeRef.current?.(false);
+            // Defer recording change callback to avoid setState during render
+            setTimeout(() => onRecordingChangeRef.current?.(false), 0);
         } else {
             // START - Clear and begin
             setError(null);
@@ -291,7 +285,8 @@ export default function VoiceRecorder({
 
                 isRecordingRef.current = true;
                 setIsRecording(true);
-                onRecordingChangeRef.current?.(true);
+                // Defer callback to avoid setState during render
+                setTimeout(() => onRecordingChangeRef.current?.(true), 0);
             } catch (err) {
                 console.error('Start error:', err);
                 setError('Could not start recording. Please try again.');
@@ -307,7 +302,8 @@ export default function VoiceRecorder({
         setTranscript('');
         setInterimTranscript('');
         interimRef.current = '';
-        onTranscriptRef.current?.('');
+        // Defer callback to avoid setState during render
+        setTimeout(() => onTranscriptRef.current?.(''), 0);
     }, []);
 
     // Memoized class names
