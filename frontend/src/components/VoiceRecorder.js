@@ -40,10 +40,14 @@ export default function VoiceRecorder({
         onRecordingChangeRef.current = onRecordingChange;
     }, [onTranscript, onRecordingChange]);
 
-    // Call onTranscript when transcript changes
+    // Call onTranscript when transcript changes - deferred to avoid setState during render
     useEffect(() => {
-        if (onTranscriptRef.current) {
-            onTranscriptRef.current(transcript);
+        if (onTranscriptRef.current && transcript) {
+            // Defer callback to next tick to avoid "setState during render" error
+            const timeoutId = setTimeout(() => {
+                onTranscriptRef.current?.(transcript);
+            }, 0);
+            return () => clearTimeout(timeoutId);
         }
     }, [transcript]);
 
